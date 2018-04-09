@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1daaacdb3a39cab43a14b0f6e4b3d074, type: 3}
+  m_Name: Black Knight
+  m_EditorClassIdentifier: 
+  Description: F O E
+  characterName: Black Knight
+  CharacterPower: 25/35
+  AdditionalPower: 
+  CardImage: {fileID: 21300000, guid: e8975e6ac45573a4c9fe9781eafd5f47, type: 3}
+  bp: 25

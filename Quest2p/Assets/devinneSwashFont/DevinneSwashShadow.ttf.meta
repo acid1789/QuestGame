@@ -1,0 +1,23 @@
+fileFormatVersion: 2
+guid: c29767f9fd4c3c04bb8d05db5c654630
+timeCreated: 1517069503
+licenseType: Free
+TrueTypeFontImporter:
+  externalObjects: {}
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: Devinne Swash Shadow
+  fontNames:
+  - Devinne Swash Shadow
+  fallbackFontReferences: []
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  useLegacyBoundsCalculation: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
