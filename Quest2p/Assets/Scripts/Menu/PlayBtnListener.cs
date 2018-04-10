@@ -5,6 +5,8 @@ using UnityEngine.SceneManagement;
 
 public class PlayBtnListener : MonoBehaviour {
 
+	public NetworkMenu NetworkOptions;
+
 	// Use this for initialization
 	void Start () {
 		
@@ -17,6 +19,8 @@ public class PlayBtnListener : MonoBehaviour {
 
 	void OnMouseDown () {
 		print ("Play Button clicked");
-		SceneManager.LoadScene ("BattleScene");
+		//SceneManager.LoadScene ("BattleScene");
+
+		NetworkOptions.Show();
 	}
 }
