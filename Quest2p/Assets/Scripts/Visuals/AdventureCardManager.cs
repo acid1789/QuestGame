@@ -1,9 +1,10 @@
 ﻿using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
+using UnityEngine.Networking;
 
 // holds the refs to all the Text, Images on the card
-public class AdventureCardManager : MonoBehaviour {
+public class AdventureCardManager : NetworkBehaviour {
 
 	public AdventureAsset adventureAsset;
 	public AdventureCardManager PreviewManager;

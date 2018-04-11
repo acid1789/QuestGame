@@ -2352,7 +2352,12 @@ MonoBehaviour:
   m_PlayerSpawnMethod: 0
   m_OfflineScene: NewMenuScene
   m_OnlineScene: 
-  m_SpawnPrefabs: []
+  m_SpawnPrefabs:
+  - {fileID: 1278534379944536, guid: bd88def53a22b2b439f8aee656d26cfe, type: 2}
+  - {fileID: 1893540313273318, guid: c9ae63265de2c3f40b52741ab262804c, type: 2}
+  - {fileID: 1871621368910492, guid: 1a31f8951d8238d478e265d096895e13, type: 2}
+  - {fileID: 1842884802066996, guid: c24eaa4b531c79540bd78c475c29eb0a, type: 2}
+  - {fileID: 1540682272388126, guid: 6392d2448129ca548a534b870d2b24e7, type: 2}
   m_CustomConfig: 0
   m_MaxConnections: 4
   m_ConnectionConfig:
@@ -2408,7 +2413,7 @@ MonoBehaviour:
   matchSize: 4
   isNetworkActive: 0
   matchMaker: {fileID: 0}
-  m_ShowLobbyGUI: 1
+  m_ShowLobbyGUI: 0
   m_MaxPlayers: 2
   m_MaxPlayersPerConnection: 1
   m_MinPlayers: 2
@@ -2444,7 +2449,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   manager: {fileID: 0}
-  showGUI: 1
+  showGUI: 0
   offsetX: 0
   offsetY: 0
 --- !u!1 &2124877693

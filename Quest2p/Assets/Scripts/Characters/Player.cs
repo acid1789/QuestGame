@@ -7,6 +7,7 @@ using UnityEngineInternal;
 //using UnityEditor.VersionControl;
 using System;
 using UnityEngine.EventSystems;
+using UnityEngine.Networking;
 
 public class Player : MonoBehaviour
 {
@@ -18,8 +19,8 @@ public class Player : MonoBehaviour
 	public int currentPlayCardIndex = 0;
 
     //Constant variables
-    private const int maxCards = 12;
-    private const int maxShields = 10;
+    public const int maxCards = 12;
+    public const int maxShields = 10;
 
     //Player information
     private string playerName;
@@ -49,6 +50,8 @@ public class Player : MonoBehaviour
         get{ return PlayerID; }
     }
 
+	public int CardsInHand { get { return hand.cardsInHand.Count; } }
+
     // opponent player
     public Player otherPlayer
     {
@@ -74,7 +77,7 @@ public class Player : MonoBehaviour
     //Call once at the start of the game
     void Start()
     {
-        CreateRankCard(rank.SquireCard());
+        //CreateRankCard(rank.SquireCard());
     }
 
     //-----------------------
@@ -95,8 +98,8 @@ public class Player : MonoBehaviour
 
     void Update()
     {
-        DistributeCards();
-        AdvancedRank();
+        //DistributeCards();
+        //AdvancedRank();
     }
 
     /*
@@ -108,7 +111,7 @@ public class Player : MonoBehaviour
 
     public void DistributeCards()
     {
-
+		/*
         if (adventureDeck.adventureDeck.Count > 0 && hand.cardsInHand.Count < maxCards)
         {
             if (PArea.owner == AreaPosition.Low)
@@ -120,13 +123,11 @@ public class Player : MonoBehaviour
                 AddCardToHand(isCardFaceUp : false);
             }
             //new DrawACardCommand(hand.cardsInHand[0], this);
-        }
+        }*/
     }
 
-    void AddCardToHand(bool isCardFaceUp)
+    public void AddCardToHand(bool isCardFaceUp, AdventureAsset newCard)
     {
-        //Get the first card of adventureDeck
-        AdventureAsset newCard = adventureDeck.adventureDeck[0];
         //Created CardLogic for that card with assigned owner and index
         CardLogic newCardLogic = new CardLogic(newCard);
         newCardLogic.owner = this;
@@ -137,8 +138,6 @@ public class Player : MonoBehaviour
             CreateACardAtPosition(newCard, newCardLogic);
         else
             CreateACardAtPosition(newCard, newCardLogic, new Vector3(0f, -180f, 0f));
-        //Remove the card from AdventureDeck
-        adventureDeck.adventureDeck.RemoveAt(0);
     }
 
     //VISUAL
@@ -179,7 +178,8 @@ public class Player : MonoBehaviour
 
 		temp = new Vector3(hand.transform.position.x + cardIndex, hand.transform.position.y, hand.transform.position.z);
 
-        NewCard.transform.position = temp;
+		NewCard.transform.position = temp;
+		NewCard.transform.SetParent(hand.transform, true);
         cardIndex++;
 
         AdventureCardManager manager = NewCard.GetComponent<AdventureCardManager>();
@@ -198,7 +198,7 @@ public class Player : MonoBehaviour
 			NewCard.GetComponent<HoverPreview> ().ThisPreviewEnabled = false;
 		}
 
-        return NewCard;
+		return NewCard;
     }
 
     /**Call this function only after finishing Quest, Event, Tournament*/
@@ -243,6 +243,7 @@ public class Player : MonoBehaviour
         else
             temp = new Vector3(hand.transform.position.x - 2.3f, hand.transform.position.y - 0.5f, hand.transform.position.z);
         NewCard.transform.position = temp;
+		NewCard.transform.SetParent(rank.transform, true);
 
         RankCardManager manager = NewCard.GetComponent<RankCardManager>();
         manager.rankAsset = currentRank;

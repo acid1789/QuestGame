@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Networking;
 
 public enum GameState
 {
@@ -19,7 +20,7 @@ public enum GameState
 	LoseTournament//Add tournament
 }
 
-public class GameManager : MonoBehaviour 
+public class GameManager : NetworkBehaviour 
 {
 
 	#region Fields
@@ -31,6 +32,8 @@ public class GameManager : MonoBehaviour
 	public int neededForTournament = 0;
 
 	public bool aiOverride = false;
+	
+	public AdventureDeck adventureDeck;	
 
 	//Story cards
 	public StoryDeck storyDeck;
@@ -38,11 +41,62 @@ public class GameManager : MonoBehaviour
 	public List<AdventureCardManager> upperCardsInPlay = new List<AdventureCardManager> ();
 	public List<AdventureCardManager> lowerCardsInPlay = new List<AdventureCardManager> ();
 
+	public Player BottomPlayer;
+	public Player TopPlayer;
+
+	PlayerController PC_Local;
+	PlayerController PC_Remote;
+	
+	int[] adventureDeckOrder;
+	int adventureDeckPosition;
 	#endregion
 
 	void Start()
 	{
 		ResetCardsInPlay ();
+	}
+
+	void Update()
+	{
+		if (PC_Local == null)
+		{
+			PlayerController[] pcs = FindObjectsOfType<PlayerController>();
+			if (pcs.Length == 2)
+			{
+				foreach (PlayerController pc in pcs)
+				{
+					if (pc.isLocalPlayer)
+						PC_Local = pc;
+					else
+						PC_Remote = pc;
+				}
+				PC_Local.SetPlayer(BottomPlayer);
+				PC_Remote.SetPlayer(TopPlayer);
+
+				if (isServer)
+					StartCoroutine(SetupGame());
+			}
+		}
+	}
+
+	IEnumerator SetupGame()
+	{
+		do
+		{
+			yield return new WaitForSeconds(2);
+		} while (!PC_Local.NetInitilaized || !PC_Remote.NetInitilaized);
+
+		// Shuffle the adventure deck
+		adventureDeckOrder = adventureDeck.Shuffle();
+		adventureDeckPosition = 0;
+		RpcSetAdventureDeck(adventureDeckOrder);
+
+		// Deal initial hands
+		for (int i = 0; i < Player.maxCards; i++)
+		{
+			PC_Local.RpcAddCardToHand(adventureDeckOrder[adventureDeckPosition++]);
+			PC_Remote.RpcAddCardToHand(adventureDeckOrder[adventureDeckPosition++]);
+		}
 	}
 
 	public void ResetCardsInPlay()
@@ -275,5 +329,13 @@ public class GameManager : MonoBehaviour
 				turnManager.playerOrder [0].shields.NumberOfAvailableShields += neededStages;
 			}
 		}
+	}
+
+	[ClientRpc]
+	public void RpcSetAdventureDeck(int[] deckOrder)
+	{
+		Debug.Log("RpcSetAdventureDeck");
+		adventureDeckOrder = deckOrder;
+		adventureDeckPosition = 0;
 	}
 }

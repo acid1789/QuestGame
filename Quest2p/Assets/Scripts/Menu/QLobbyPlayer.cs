@@ -5,21 +5,23 @@ using UnityEngine.Networking;
 
 public class QLobbyPlayer : NetworkLobbyPlayer {
 
-	// Use this for initialization
-	void Start () {
-		
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		
+	bool _enteredLobby;
+	System.DateTime _lobbyEnterTime;
+
+	public void Update()
+	{
+		if (isLocalPlayer && _enteredLobby && (System.DateTime.Now - _lobbyEnterTime).TotalSeconds > 1)
+		{
+			_enteredLobby = false;
+			readyToBegin = true;
+			SendReadyToBeginMessage();
+		}
 	}
 
 	public override void OnClientEnterLobby()
 	{
 		base.OnClientEnterLobby();
-		Debug.Log("OnClientEnterLobby");
-		readyToBegin = true;
-		SendReadyToBeginMessage();
+		_lobbyEnterTime = System.DateTime.Now;
+		_enteredLobby = true;
 	}
 }

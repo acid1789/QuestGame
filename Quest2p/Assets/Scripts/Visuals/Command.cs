@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class Command: MonoBehaviour
+public class Command: ScriptableObject
 {
     public static Queue<Command> CommandQueue = new Queue<Command>();
     public static bool playingQueue = false;

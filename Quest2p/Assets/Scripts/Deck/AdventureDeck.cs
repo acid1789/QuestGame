@@ -10,11 +10,12 @@ public class AdventureDeck : Deck
     public List<AdventureAsset> adventureDeck = new List<AdventureAsset>();
 
     private int totalCardinAdventureDeck = 0;
+	int nextCard;
 
     void Awake()
     {
-        shuffleDeck();
-    }
+		nextCard = 0;
+	}
 
     protected override void shuffleDeck()
     {
@@ -39,8 +40,8 @@ public class AdventureDeck : Deck
 
     protected override void drawCard()
     {
-        
-    }
+
+	}
 
     protected override void removeCard()
     {
@@ -56,4 +57,23 @@ public class AdventureDeck : Deck
     {
 
     }
+
+	public int[] Shuffle()
+	{
+		List<int> order = new List<int>();
+		List<int> shuffled = new List<int>();
+
+		for (int i = 0; i < adventureDeck.Count; i++)
+			order.Add(i);
+
+		System.Random rand = new System.Random();
+		while (order.Count > 0)
+		{
+			int index = rand.Next(order.Count);
+			shuffled.Add(order[index]);
+			order.RemoveAt(index);
+		}
+
+		return shuffled.ToArray();
+	}
 }
