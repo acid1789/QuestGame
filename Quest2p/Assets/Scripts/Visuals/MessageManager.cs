@@ -39,9 +39,11 @@ public class MessageManager : MonoBehaviour
         MessagePanel.SetActive(false);
 		ShowButtons (false);
 
+		gameManager.MessageComplete();
+
+		/*
 		Debug.Log (gameManager.currentGameState);
-
-
+		
 		if (gameManager.turnManager.currentPlayerIndex == 1) 
 		{
 			gameManager.aiOverride = true;
@@ -71,8 +73,7 @@ public class MessageManager : MonoBehaviour
 			if (gameManager.neededForTournament >= 2) {
 				gameManager.StartTournament ();
 			}
-		}
-
+		}*/
     }
 
 	public void ShowButtons(bool show)

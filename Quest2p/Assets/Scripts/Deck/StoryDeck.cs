@@ -13,7 +13,7 @@ public class StoryDeck : Deck
     // Update is called once per frame
     void Awake()
     {
-        shuffleDeck();
+        //shuffleDeck();
     }
 
     protected override void shuffleDeck()
@@ -66,4 +66,23 @@ public class StoryDeck : Deck
     {
 
     }
+
+	public int[] Shuffle()
+	{
+		List<int> order = new List<int>();
+		List<int> shuffled = new List<int>();
+
+		for (int i = 0; i < storyDeck.Count; i++)
+			order.Add(i);
+
+		System.Random rand = new System.Random();
+		while (order.Count > 0)
+		{
+			int index = rand.Next(order.Count);
+			shuffled.Add(order[index]);
+			order.RemoveAt(index);
+		}
+
+		return shuffled.ToArray();
+	}
 }

@@ -46,9 +46,15 @@ public class GameManager : NetworkBehaviour
 
 	PlayerController PC_Local;
 	PlayerController PC_Remote;
+	PlayerController[] PlayOrder;
+
+	[SyncVar]
+	int CurrentPlayer;
 	
 	int[] adventureDeckOrder;
 	int adventureDeckPosition;
+	int[] storyDeckOrder;
+	int storyDeckPosition;
 	#endregion
 
 	void Start()
@@ -70,8 +76,11 @@ public class GameManager : NetworkBehaviour
 					else
 						PC_Remote = pc;
 				}
-				PC_Local.SetPlayer(BottomPlayer);
-				PC_Remote.SetPlayer(TopPlayer);
+				PC_Local.Player = BottomPlayer;
+				PC_Local.CardsInPlay = lowerCardsInPlay;
+				PC_Remote.Player = TopPlayer;
+				PC_Remote.CardsInPlay = upperCardsInPlay;
+				PlayOrder = isServer ? new PlayerController[] { PC_Local, PC_Remote } : new PlayerController[] { PC_Remote, PC_Local };
 
 				if (isServer)
 					StartCoroutine(SetupGame());
@@ -86,16 +95,93 @@ public class GameManager : NetworkBehaviour
 			yield return new WaitForSeconds(2);
 		} while (!PC_Local.NetInitilaized || !PC_Remote.NetInitilaized);
 
+		// Shuffle the story deck
+		storyDeckOrder = storyDeck.Shuffle();
+		storyDeckPosition = 0;
+
 		// Shuffle the adventure deck
 		adventureDeckOrder = adventureDeck.Shuffle();
 		adventureDeckPosition = 0;
-		RpcSetAdventureDeck(adventureDeckOrder);
 
 		// Deal initial hands
 		for (int i = 0; i < Player.maxCards; i++)
 		{
 			PC_Local.RpcAddCardToHand(adventureDeckOrder[adventureDeckPosition++]);
 			PC_Remote.RpcAddCardToHand(adventureDeckOrder[adventureDeckPosition++]);
+		}
+
+		yield return new WaitForSeconds(1);
+		CurrentPlayer = -1;
+		StartNextTurn();
+	}
+
+	void StartNextTurn()
+	{
+		currentGameState = GameState.None;
+		aiOverride = false;
+		neededStages = -1;
+		neededForTournament = 0;
+
+		turnManager.messMan.Reset();
+
+		//hide the cards in play
+		PC_Local.ClearCardsInPlay();
+		PC_Remote.ClearCardsInPlay();
+
+		CurrentPlayer++;
+		if (CurrentPlayer >= PlayOrder.Length)
+			CurrentPlayer = 0;
+
+		DrawStoryCard();
+		RpcShowMessage("New Turn", 2.0f, GetCurrentPlayer().netId);
+		currentGameState = GameState.StartedCard;
+	}
+
+	public void MessageComplete()
+	{
+		if (isServer)
+		{
+			Debug.Log("GameState: " + currentGameState);
+
+			switch (currentGameState)
+			{
+				case GameState.WonQuest:
+				case GameState.LostQuest:
+				case GameState.WinTournament:
+				case GameState.LoseTournament:
+				case GameState.DecideToSponsorQuest:
+					StartNextTurn();
+					break;
+				case GameState.Event:
+					ProcessEvent();
+					StartNextTurn();					
+					break;
+				case GameState.StartedCard:
+					ProcessDrawnCard();
+					break;
+				case GameState.AskEnterTournament:
+					throw new System.NotImplementedException();
+			}			
+		}
+	}
+
+	void ProcessDrawnCard()
+	{
+		switch (currentStoryCard.CardDescriptionText.text)
+		{
+			case "EVENT":
+				currentGameState = GameState.Event;
+				RpcShowMessage(currentStoryCard.storyAsset.CharacterPower, 3.0f, GetCurrentPlayer().netId);
+				break;
+			case "QUEST":
+				currentGameState = GameState.DecideToSponsorQuest;
+				RpcShowMessage("Sponsor Quest?", 27f, GetCurrentPlayer().netId);
+				break;
+			case "TOURNAMENT":
+				currentGameState = GameState.AskEnterTournament;
+				neededForTournament = 0;
+				RpcShowMessage("Player Join Tournament?", 27.0f, GetCurrentPlayer().netId);
+				break;
 		}
 	}
 
@@ -133,48 +219,63 @@ public class GameManager : NetworkBehaviour
 
 	public void DrawStoryCard()
 	{
-		//while (currentStoryCard.CardDescriptionText.text != "TOURNAMENT")  //Only test quest cards right now
-		{
-			currentStoryCard.storyAsset = storyDeck.DrawNewCard ();
-			currentStoryCard.ReadCardFromAsset ();
-		}
+		int storyCard = storyDeckOrder[storyDeckPosition++];
+		RpcSetStoryCard(storyCard);
 	}
 		
 	/// Called after event is played
 	public void ProcessEvent()
 	{
-		switch (currentStoryCard.storyAsset.CharacterPower) {
+		int numShields;
+		switch (currentStoryCard.storyAsset.CharacterPower)
+		{
+			//Handeling the "POX"
+			case "Pox":
+				// Other player looses a shield
+				PlayerController opc = GetOtherPlayer();
+				numShields = opc.Player.shields.NumberOfAvailableShields;
+				if (numShields > 0)
+					opc.RpcSetShields(numShields - 1);
+				break;
 
-		//Handeling the "POX"
-		case "Pox":
-			turnManager.playerOrder [0].shields.NumberOfAvailableShields -= 1;
-			turnManager.playerOrder [1].shields.NumberOfAvailableShields -= 1;
-			turnManager.playerOrder [turnManager.currentPlayerIndex].shields.NumberOfAvailableShields++;
-
-			if (turnManager.playerOrder[0].shields.NumberOfAvailableShields < 0) {
-				turnManager.playerOrder [0].shields.NumberOfAvailableShields = 0;
-			}
-
-			if (turnManager.playerOrder[1].shields.NumberOfAvailableShields < 0) {
-				turnManager.playerOrder [1].shields.NumberOfAvailableShields = 0;
-			}
-			break;
-		
-		//Handeling the "PLAGUE"
-		case "Plague":
-			if (turnManager.playerOrder[turnManager.currentPlayerIndex].shields.NumberOfAvailableShields > 1) {
-				turnManager.playerOrder [turnManager.currentPlayerIndex].shields.NumberOfAvailableShields -= 2;
-			}
-			break;
+			//Handeling the "PLAGUE"
+			case "Plague":
+				PlayerController pc = GetCurrentPlayer();
+				numShields = pc.Player.shields.NumberOfAvailableShields;
+				if (numShields > 1)
+					pc.RpcSetShields(numShields - 2);
+				break;
 		}
-
-
 	}
 
-	public void SelectYesOrNo(bool selectedYes) 
+	public void SelectYesOrNo(bool selectedYes)
+	{
+		CmdSelectYesOrNo(selectedYes);
+	}
+	
+	[Command]
+	public void CmdSelectYesOrNo(bool selectedYes)
 	{
 		turnManager.messMan.Reset ();
 
+		switch (currentGameState)
+		{
+			case GameState.DecideToSponsorQuest:
+				if (selectedYes)
+				{
+					currentGameState = GameState.SettingUpQuestCards;
+					int needStages = int.Parse(currentStoryCard.storyAsset.CharacterPower.Substring(0, 1));
+					RpcStartQuest(needStages);
+				}
+				else
+					StartNextTurn();
+				break;
+			case GameState.AskEnterTournament:
+				if (selectedYes)
+					CmdEnterTournament();
+				break;
+		}
+		/*
 		if (turnManager.playerOrder[turnManager.currentPlayerIndex].isAI)
 		{
 			switch (currentGameState)
@@ -221,7 +322,7 @@ public class GameManager : NetworkBehaviour
 					StartTournament ();
 				}
 			}
-		}
+		}*/
 	}
 
 	public void StartTournament()
@@ -331,11 +432,127 @@ public class GameManager : NetworkBehaviour
 		}
 	}
 
-	[ClientRpc]
-	public void RpcSetAdventureDeck(int[] deckOrder)
+	public void ExecuteQuest()
 	{
-		Debug.Log("RpcSetAdventureDeck");
-		adventureDeckOrder = deckOrder;
-		adventureDeckPosition = 0;
+		// Reveal all cards
+		RpcRevealCardsInPlay();
+
+		// Calculate score
+		int scoreA = 0;
+		int scoreB = 0;
+		for (int i = 0; i < neededStages; i++)
+		{
+			if (upperCardsInPlay[i].adventureAsset.bp < lowerCardsInPlay[i].adventureAsset.bp)
+				scoreB++;
+			else
+				scoreA++;
+		}
+		int winner = scoreA > scoreB ? 0 : 1;
+		int loser = winner == 0 ? 1 : 0;
+		PlayOrder[winner].RpcAddShields(neededStages);
+		PlayOrder[winner].RpcShowMessage("You Won!", 2.0f, false);
+		PlayOrder[loser].RpcShowMessage("You Lost!", 2.0f, false);
+
+		currentGameState = GameState.WonQuest;
+
+		// Refill hands
+		for (int i = 0; i < neededStages; i++)
+		{
+			PC_Local.ReplaceCard(adventureDeckOrder[adventureDeckPosition++]);
+			PC_Remote.ReplaceCard(adventureDeckOrder[adventureDeckPosition++]);
+		}
+	}
+
+	public void ClickCard(PlayerController pc, int card)
+	{
+		switch (currentGameState)
+		{
+			case GameState.SettingUpQuestCards:
+				if( pc.CardsPlayed < neededStages )
+					pc.PlayCard(card);
+				if (PC_Local.CardsPlayed >= neededStages && PC_Remote.CardsPlayed >= neededStages)
+				{
+					ExecuteQuest();
+				}
+				break;
+			case GameState.PlayingQuest:
+				break;
+			case GameState.PlayTournament:
+				break;
+		}
+	}
+
+	public PlayerController GetCurrentPlayer()
+	{
+		return PlayOrder[CurrentPlayer];
+	}
+
+	public PlayerController GetOtherPlayer()
+	{
+		int other = CurrentPlayer + 1;
+		if (other > 1)
+			other = 0;
+		return PlayOrder[other];
+	}
+
+	public PlayerController FindPlayer(NetworkInstanceId id)
+	{
+		foreach (PlayerController pc in PlayOrder)
+		{
+			if (pc.netId == id)
+				return pc;
+		}
+		return null;
+	}
+
+	[Command]
+	public void CmdEnterTournament()
+	{
+		neededForTournament++;
+	}
+	
+	[ClientRpc]
+	public void RpcSetStoryCard(int storyCard)
+	{
+		currentStoryCard.storyAsset = storyDeck.storyDeck[storyCard];
+		currentStoryCard.ReadCardFromAsset();
+	}
+
+	[ClientRpc]
+	public void RpcShowMessage(string message, float duration, NetworkInstanceId currentTurnPc)
+	{
+		bool showButtons = false;
+		bool isLocalPlayerTurn = (PC_Local.netId == currentTurnPc);
+		switch (message)
+		{
+			case "New Turn":
+				message = isLocalPlayerTurn ? "Your Turn" : "Enemy Turn";
+				break;
+			case "Sponsor Quest?":
+				showButtons = isLocalPlayerTurn;
+				break;
+			case "Player Join Tournament?":
+				showButtons = true;
+				break;
+		}
+
+		new ShowMessageCommand(message, duration, showButtons).AddToQueue();
+	}
+
+	[ClientRpc]
+	public void RpcStartQuest(int needCards)
+	{
+		turnManager.messMan.Reset();
+		neededStages = needCards;
+	}
+
+	[ClientRpc]
+	public void RpcRevealCardsInPlay()
+	{
+		for (int i = 0; i < upperCardsInPlay.Count; i++)
+		{
+			upperCardsInPlay[i].gameObject.GetComponent<BetterCardRotation>().CardBack.gameObject.SetActive(false);
+			upperCardsInPlay[i].gameObject.GetComponent<HoverPreview>().ThisPreviewEnabled = true;
+		}
 	}
 }

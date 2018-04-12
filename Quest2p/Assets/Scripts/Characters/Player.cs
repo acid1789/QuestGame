@@ -13,6 +13,7 @@ public class Player : MonoBehaviour
 {
 	public GameManager gameManager;
 	public TurnManager turnManager;
+	public PlayerController PC;
 
 	//AI logic
 	public bool isAI;
@@ -77,7 +78,7 @@ public class Player : MonoBehaviour
     //Call once at the start of the game
     void Start()
     {
-        //CreateRankCard(rank.SquireCard());
+        CreateRankCard(rank.SquireCard());
     }
 
     //-----------------------
@@ -99,7 +100,7 @@ public class Player : MonoBehaviour
     void Update()
     {
         //DistributeCards();
-        //AdvancedRank();
+        AdvancedRank();
     }
 
     /*
@@ -126,22 +127,20 @@ public class Player : MonoBehaviour
         }*/
     }
 
-    public void AddCardToHand(bool isCardFaceUp, AdventureAsset newCard)
+    public AdventureCardManager AddCardToHand(bool isCardFaceUp, AdventureAsset newCard)
     {
         //Created CardLogic for that card with assigned owner and index
         CardLogic newCardLogic = new CardLogic(newCard);
         newCardLogic.owner = this;
         //Added to player's hand
         hand.cardsInHand.Insert(0, newCardLogic);
-        //Created the card on visual
-        if (isCardFaceUp)
-            CreateACardAtPosition(newCard, newCardLogic);
-        else
-            CreateACardAtPosition(newCard, newCardLogic, new Vector3(0f, -180f, 0f));
+		//Created the card on visual
+
+		return CreateACardAtPosition(newCard, newCardLogic, isCardFaceUp ? default(Vector3) : new Vector3(0, -180, 0));
     }
 
-    //VISUAL
-    GameObject CreateACardAtPosition(AdventureAsset newAdventureCard, CardLogic newLogic, Vector3 eulerAngles = default(Vector3), Vector3 position = default(Vector3))
+	//VISUAL
+	AdventureCardManager CreateACardAtPosition(AdventureAsset newAdventureCard, CardLogic newLogic, Vector3 eulerAngles = default(Vector3), Vector3 position = default(Vector3))
     {
         // Instantiate a card depending on its type
         GameObject NewCard;
@@ -198,11 +197,47 @@ public class Player : MonoBehaviour
 			NewCard.GetComponent<HoverPreview> ().ThisPreviewEnabled = false;
 		}
 
-		return NewCard;
+		return manager;
     }
 
-    /**Call this function only after finishing Quest, Event, Tournament*/
-    void AdvancedRank()
+	AdventureCardManager FindCardInHand(AdventureAsset card)
+	{
+		foreach (GameObject go in hand.cardsDealt)
+		{
+			AdventureCardManager acm = go.GetComponent<AdventureCardManager>();
+			if (acm.adventureAsset == card)
+				return acm;
+		}
+		return null;
+	}
+
+	public void HideHandCard(AdventureAsset card)
+	{
+		AdventureCardManager acm = FindCardInHand(card);
+		if (acm != null)
+		{
+			acm.GetComponent<HoverPreview>().ThisPreviewEnabled = false;
+			acm.GetComponent<BetterCardRotation>().CardBack.gameObject.SetActive(true);
+		}
+	}
+
+	public void ReplaceCardInHand(AdventureAsset oldCard, AdventureAsset newCard)
+	{
+		AdventureCardManager acm = FindCardInHand(oldCard);
+		if (acm != null)
+		{
+			acm.adventureAsset = newCard;
+			acm.ReadCardFromAsset();
+			if (!isAI)
+			{
+				acm.GetComponent<HoverPreview>().ThisPreviewEnabled = true;
+				acm.GetComponent<BetterCardRotation>().CardBack.gameObject.SetActive(false);
+			}
+		}
+	}
+
+	/**Call this function only after finishing Quest, Event, Tournament*/
+	void AdvancedRank()
     {
         if (shields.NumberOfAvailableShields >= 5 && rank.GetCurrentRank == (int)RANK.SQUIRE) //rank is Squire
         {
@@ -252,6 +287,9 @@ public class Player : MonoBehaviour
 
 	public void UseCard(AdventureCardManager adventureCard)
 	{
+		PC.CmdClickCard(adventureCard.Index);
+	}
+	/*
 		if (gameManager.currentGameState == GameState.PlayingQuest) 
 		{
 			gameManager.AddCardToList (gameManager.lowerCardsInPlay, currentPlayCardIndex, adventureCard.adventureAsset);
@@ -291,7 +329,7 @@ public class Player : MonoBehaviour
 
 			}
 		}
-	}
+	}*/
 
 	//Turn logic
 	public void StartTurn()

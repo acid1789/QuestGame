@@ -937,8 +937,9 @@ Transform:
   - {fileID: 347907610}
   - {fileID: 1146603851}
   - {fileID: 730257406}
+  - {fileID: 1881416343}
   m_Father: {fileID: 2117151318}
-  m_RootOrder: 4
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &395124148
 MonoBehaviour:
@@ -953,6 +954,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameManager: {fileID: 2117151319}
   turnManager: {fileID: 1614990410}
+  PC: {fileID: 0}
   isAI: 1
   currentPlayCardIndex: 0
   PlayerID: 0
@@ -2930,8 +2932,9 @@ Transform:
   - {fileID: 979146114}
   - {fileID: 1420657638}
   - {fileID: 701299578}
+  - {fileID: 1550394243}
   m_Father: {fileID: 2117151318}
-  m_RootOrder: 3
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1296589599
 MonoBehaviour:
@@ -2946,6 +2949,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameManager: {fileID: 2117151319}
   turnManager: {fileID: 1614990410}
+  PC: {fileID: 0}
   isAI: 0
   currentPlayCardIndex: 0
   PlayerID: 0
@@ -3431,8 +3435,8 @@ RectTransform:
   - {fileID: 1693464219}
   - {fileID: 1169477349}
   - {fileID: 1472279345}
-  m_Father: {fileID: 2117151318}
-  m_RootOrder: 1
+  m_Father: {fileID: 1296589598}
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -4159,7 +4163,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 4357002913995916, guid: 27531baf31e955d4c8142e2918901fe8, type: 2}
       propertyPath: m_RootOrder
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1149646952103612, guid: 27531baf31e955d4c8142e2918901fe8, type: 2}
       propertyPath: m_Name
@@ -4216,8 +4220,8 @@ RectTransform:
   - {fileID: 428379577}
   - {fileID: 172704315}
   - {fileID: 2068291339}
-  m_Father: {fileID: 2117151318}
-  m_RootOrder: 0
+  m_Father: {fileID: 395124147}
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -4593,10 +4597,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 1881416343}
-  - {fileID: 1550394243}
-  - {fileID: 1863580998}
   - {fileID: 1296589598}
+  - {fileID: 1863580998}
   - {fileID: 395124147}
   m_Father: {fileID: 0}
   m_RootOrder: 8

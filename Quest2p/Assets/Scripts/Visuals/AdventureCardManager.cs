@@ -19,6 +19,8 @@ public class AdventureCardManager : NetworkBehaviour {
     [Header("Image References")]
     public Image CardFaceImage;
 
+	public int Index;
+
 
     void Awake()
     {
