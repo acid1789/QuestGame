@@ -61,6 +61,12 @@ public class PlayerController : NetworkBehaviour
 		_gm.ClickCard(this, card);
 	}
 
+	[Command]
+	public void CmdSelectYesOrNo(bool selectedYes)
+	{
+		_gm.DoYesNo(selectedYes, this);
+	}
+
 	[ClientRpc]
 	public void RpcAddCardToHand(int cardIndex)
 	{
@@ -96,14 +102,13 @@ public class PlayerController : NetworkBehaviour
 			CardsInPlay[slot].GetComponent<HoverPreview>().ThisPreviewEnabled = false;
 			CardsInPlay[slot].GetComponent<BetterCardRotation>().CardBack.gameObject.SetActive(true);
 		}
-		else
-			_player.HideHandCard(card);
+		//else
+		//	_player.HideHandCard(card);
 	}
 
 	[ClientRpc]
 	public void RpcReplaceCard(int slot, int advCardIndex)
 	{
-		Debug.Log(string.Format("RpcReplaceCard {2}, slot:{0}, advCardIndex:{1}", slot, advCardIndex, netId));
 		AdventureAsset oldCard = CardsInPlay[slot].adventureAsset;
 		AdventureAsset card = _gm.adventureDeck.adventureDeck[advCardIndex];
 		_player.ReplaceCardInHand(oldCard, card);
